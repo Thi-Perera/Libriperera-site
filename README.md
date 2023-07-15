@@ -65,18 +65,33 @@ Operazioni riservate agli Admin:
 Traduzione verso il modello relazionale:
 
 utente (id_utente, username, ruolo, email, password)
+
 articolo (ISBN, Nome, Autore, Editore, Descrizione, Prezzo, Tipologia)
+
 stock (id_prodotto, Disponibilità)
+
 immagine_articolo (ISBN*, numero_immagine, image)
+
 carrello (id_utente*, id_prodotto*, quantità)
+
 indirizzo(id_indirizzo, id_cliente*, via, admin_area, countrycode, postalcode)
+
 pagamento(id_pagamento, id_movimento, id_utente*, payment_status, payer_email, operazione, importo)
+
 ordine(id_ordine, id_cliente*, id_pagamento*, id_indirizzo*, Data_inserimento, costo_totale, status_ordine)
+
 prodotto_ordinato (id_prodotto*, id_ordine, quantità, status_prodotto)
+
 operazione_stock(id_operazione_stock, utente*, id_prodotto*, id_ordine*, operazione, quantità, data_operazione)
+
 gestione_stock(id_gestione_stock, admin*, id_prodotto*, operazione, valore_precedente, valore_successivo)
+
 storico_articolo(id_storico_art, admin*, ISBN*, operazione, data_operazione, Nome, Autore, Editore, Descrizione, Prezzo, Tipologia)
+
 registro_modifiche_articolo(id_operazione_art, campo_modificato, admin*, ISBN*, data_operazione, valore_precedente)
+
 gestione_immagine(id_gestione_immagine, admin*, ISBN*, numero_immagine*, operazione, immagine)
+
 operazione_ordine(id_operazione_ordine, admin*, ISBN*, operazione, data_operazione)
+
 creazione_admin(id_creazione_admin, admin_loggato*, admin_aggiunto*, data_inserimento)
