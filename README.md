@@ -62,7 +62,7 @@ Operazioni riservate agli Admin:
 - Mostra articolo: mostrare le informazioni relative a un singolo articolo.
 - Registrare nuovo Admin: registrare un nuovo admin sul sito.
 
-Traduzione verso il modello relazionale:
+## Traduzione verso il modello relazionale:
 
 utente (id_utente, username, ruolo, email, password)
 
