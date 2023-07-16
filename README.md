@@ -30,11 +30,12 @@ Piattaforma admin | Sito web lato admin che permette di gestire il catalogo degl
 
 ## Schema ER
 
- ![Diagramma E-R](link_all'immagine)
+![ER_libriperera drawio](https://github.com/Coco01010/Libriperera-site/assets/99124492/be9c01ef-cfa6-4f4f-a6a7-77d5d800bd01)
 
 ## Diagramma E-R Ristrutturato
 
-![Diagramma E-R](link_all'immagine)
+
+![ER-ristrutturato_libriperera drawio (1)](https://github.com/Coco01010/Libriperera-site/assets/99124492/e92806f0-1921-48da-aea1-4e9a784f2c88)
 
 
 Lo schema ER del progetto è stato ristrutturato per migliorare l'efficienza del database. Alcune informazioni ridondanti sono state eliminate e le generalizzazioni sono state risolte combinando le entità genitore con le entità figlie. Di seguito sono riportati i principali cambiamenti:
@@ -44,7 +45,7 @@ Lo schema ER del progetto è stato ristrutturato per migliorare l'efficienza del
 3. L'attributo "immagine" è stato rimosso dall'entità "articolo": in quanto un articolo può avere più di un'immagine. È stata aggiunta un'entità separata chiamata "immagine_articolo" e uno storico chiamato "gestore_immagine" per registrare le operazioni di modifica delle immagini.
 4. Lo storico delle modifiche: alle informazioni degli articoli è stato suddiviso in due entità distinte: "storico_articolo" per l'inserimento/eliminazione di nuovi articoli e "registro_modifiche_articolo" per le modifiche ai singoli campi degli articoli esistenti.
 5. suddivisione di operazione articolo: tra storico_articolo e articolo, avremo le row: descrizione , prezzo, editore, nome in entrambi che danno la stessa informazione, questa è una ridondanza ma che è utile piu avanti quando si modficheranno i dati in ‘articolo’, cosi avremo i dati originali di un articolo, e le ulteriori modifiche verranno segnate su un altra tabella ‘modifiche_articolo’ che invece di salvarsi tutte le row ogni volta, si salva solo il singolo dato cambiato(operazione che ritengo più probabile). Se togliessi scegliere di eliminare la prima ridondanza(che potrebbe essere anche temporanea) dovrei necessariamente togliere le row da articolo rendendo tutto piu confusionario.
-6. separazione di articolo da  immagine_articolo : banalmente il mio sito accetta solo 3 immagini , nulla vietà di inserirne altri per ogni articolo, così se un giorno un sito vuole più immagini per un articolo può averle (sistema abbastanza flessibile.
+6. separazione di articolo da  immagine_articolo : banalmente il sito utilizza massimo  3 immagini , nulla vietà di inserirne altri per ogni articolo e utilizzarli nell'eventualità di un aumento di immagine da mostrare in un inserzione o per altre funzionalità future. (sistema scalabile).
 
 
 ## Lista delle operazioni
