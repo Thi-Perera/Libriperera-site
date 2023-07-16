@@ -1,0 +1,15 @@
+ISBN: 9788838665875
+
+NOME: Basi di dati
+
+autore: Paolo Atzeni
+
+Editore: McGraw Hill Education
+
+Descrizione: Questo volume si rivolge agli studenti dei corsi di Basi di dati dei corsi di laurea in Ingegneria, Scienze dell'Informazione, Informatica. Il testo costituisce la versione estesa
+ della quarta edizione del volume "Basi di dati. Modelli e linguaggi di interrogazione", pubblicato a giugno 2013, ed è rivolto ai corsi di Basi di dati con molti crediti, non divisi in moduli.
+ I contenuti si articolano in quattro parti. La prima illustra le caratteristiche fondamentali delle basi di dati, (modello relazionale e relativi linguaggi).
+
+prezzo:59,00
+
+image: atzeni1.jpg, atzeni2.jpg, atzeni3.jpg
