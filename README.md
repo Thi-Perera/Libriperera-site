@@ -455,4 +455,187 @@ END
 ```
 </details>
 
-- Quando viene modificata un'immagine associata a un articolo, viene creata una riga nella tabella "registro_modifiche_immagine" per tracciare l'operazione. 
+- Quando viene aggiunta un'immagine a un articolo, viene creata una riga nella tabella "registro_modifiche_immagine" per tracciare l'operazione.
+  
+<details>
+<summary>Traccia la rimozione di un articolo (trace_remove_articolo)</summary>
+
+```sql
+CREATE TRIGGER `trace_remove_articolo` BEFORE DELETE ON `articolo`
+ FOR EACH ROW BEGIN
+ 	-- salvo la quantità da stock
+ 	DECLARE stockquantity INT;
+	SELECT disponibilità INTO stockquantity
+	FROM stock
+	WHERE ISBN = OLD.ISBN;
+
+    -- INSERISCO la row di segnalazione
+    INSERT INTO storico_articolo (operazione, ISBN, Nome, Editore, Autore, Descrizione, Prezzo, Quantità, Tipologia)
+    VALUES ('remove', OLD.ISBN, OLD.Nome, OLD.Editore, OLD.Autore, OLD.Descrizione, OLD.Prezzo, stockquantity, OLD.Tipologia);
+
+    DELETE FROM stock WHERE ISBN = OLD.ISBN;
+    DELETE FROM carrello WHERE ISBN = OLD.ISBN;
+END
+```
+</details>
+
+<details>
+<summary>preveniere la cancellazione di un indirizzo se l'ordine è ancora in attesa (prevent_address_delete)</summary>
+
+```sql
+CREATE TRIGGER `prevent_address_delete` BEFORE DELETE ON `indirizzo`
+ FOR EACH ROW BEGIN
+  DECLARE order_exists INT DEFAULT 0;
+  
+  SELECT 1 INTO order_exists
+  FROM ordine
+  WHERE ordine.id_indirizzo = OLD.id_indirizzo
+  AND ordine.status_ordine = 'in_attesa';
+  
+  IF order_exists = 1 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Impossibile cancellare l'indirizzo poiché esiste un ordine in attesa associato';
+  END IF;
+END
+```
+</details>
+
+<details>
+<summary>Traccia la creazione di un nuovo ordine (trace_new_order)</summary>
+
+```sql
+CREATE TRIGGER `trace_new_order` AFTER INSERT ON `ordine`
+ FOR EACH ROW BEGIN
+	INSERT INTO operazione_su_ordine (id_ordine, id_utente, operazione)
+    VALUES (NEW.id_ordine, NEW.id_cliente, 'new_order');
+END
+```
+</details>
+
+<details>
+<summary>Traccia l'operazione di segnalazione dell'avvenuta spedizione di un ordine (update_ordine)</summary>
+
+```sql
+CREATE TRIGGER `update_ordine` AFTER UPDATE ON `ordine`
+ FOR EACH ROW BEGIN
+    IF NEW.status_ordine = 'shipped' THEN
+        -- Inserisce una riga in operazione_su_ordine
+        INSERT INTO operazione_su_ordine (id_ordine, operazione)
+        VALUES (NEW.id_ordine, 'mark_as_shipped');
+        
+        -- Aggiorna lo status_prodotto dei prodotti in prodotto_ordinato
+        UPDATE prodotto_ordinato
+        SET status_prodotto = 'shipped'
+        WHERE id_ordine = NEW.id_ordine AND status_prodotto = 'ordered';
+    END IF;
+END
+```
+</details>
+
+<details>
+<summary>Prevenire la cancellazione di un pagamento se è relativo ad un ordine ancora in corso di elaborazione (prevent_payment_delete)</summary>
+
+```sql
+CREATE TRIGGER `prevent_payment_delete` BEFORE DELETE ON `pagamento`
+ FOR EACH ROW BEGIN
+  DECLARE order_exists INT DEFAULT 0;
+  
+  SELECT 1 INTO order_exists
+  FROM ordine
+  WHERE ordine.id_pagamento = OLD.id_pagamento;
+  
+  IF order_exists = 1 THEN
+    SIGNAL SQLSTATE '45008'
+    SET MESSAGE_TEXT = 'Impossibile cancellare il pagamento poiché esiste un ordine associato.';
+  END IF;
+END
+```
+</details>
+
+<details>
+<summary>Modifica dello status di un ordine in base all'operazione effettuata su di esso (update_status_ordine)</summary>
+
+```sql
+CREATE TRIGGER `update_status_ordine` AFTER UPDATE ON `pagamento`
+ FOR EACH ROW UPDATE ordine
+INNER JOIN pagamento ON pagamento.id_pagamento = ordine.id_pagamento
+SET status_ordine = 
+    CASE 
+        WHEN pagamento.payment_status = 'VOIDED' THEN 'cancellato'
+        WHEN pagamento.payment_status = 'REFUNDED' THEN 'rimborsato'
+        WHEN pagamento.payment_status = 'COMPLETED_AND_SHIPPED' THEN 'spedito'
+        WHEN pagamento.payment_status = 'COMPLETED' THEN 'in attesa'
+    END
+WHERE pagamento.id_pagamento = NEW.id_pagamento
+```
+</details>
+
+<details>
+<summary> semplice check sulla disponibilità con messaggio di errore (check_stock_disponibilità)</summary>
+
+```sql
+CREATE TRIGGER `check_stock_disponibilità` BEFORE UPDATE ON `stock`
+ FOR EACH ROW BEGIN
+    IF NEW.disponibilità < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La disponibilità deve essere maggiore o uguale a 0';
+    END IF;
+END
+```
+</details>
+
+<details>
+<summary> aggiorna la quantità in cascata su tutti i carrelli che richiedono una quantità di un articolo non piu disponibile. (update_cart_quantity)</summary>
+
+```sql
+CREATE TRIGGER `update_cart_quantity` AFTER UPDATE ON `stock`
+ FOR EACH ROW BEGIN
+    UPDATE carrello
+    SET quantità =
+        CASE 
+            WHEN NEW.disponibilità < quantità THEN NEW.disponibilità
+            ELSE quantità
+        END
+    WHERE id_stock = NEW.id_stock;
+END
+```
+</details>
+
+<details>
+<summary> Previene la cancellazione di un account utente se ha ancora dei ordini in attesa. (prevent_delete_user_trigger)</summary>
+
+```sql
+CREATE TRIGGER `prevent_delete_user_trigger` BEFORE DELETE ON `utente`
+ FOR EACH ROW BEGIN
+    -- Verifica se esistono ordini in attesa per l'utente
+    DECLARE order_count INT;
+    SELECT COUNT(*) INTO order_count
+    FROM ordine
+    WHERE id_cliente = OLD.id_utente AND status_ordine = 'in_attesa';
+
+    IF order_count > 0 THEN
+        -- Ci sono ordini in attesa, evita l'eliminazione dell'utente
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Impossibile eliminare l'utente. Ci sono ordini in attesa. Rimborsa l'ordine o aspetta che venga spedito';
+    END IF;
+END
+```
+</details>
+
+<details>
+<summary> Eliminazione a cascata di tutte le info di un cliente che vuole cancellare l'account. (utente_info_cascade_delete)</summary>
+
+```sql
+CREATE TRIGGER `prevent_delete_user_trigger` BEFORE DELETE ON `utente`
+ FOR EACH ROW BEGIN
+    -- Verifica se esistono ordini in attesa per l'utente
+    DECLARE order_count INT;
+    SELECT COUNT(*) INTO order_count
+    FROM ordine
+    WHERE id_cliente = OLD.id_utente AND status_ordine = 'in_attesa';
+
+    IF order_count > 0 THEN
+        -- Ci sono ordini in attesa, evita l'eliminazione dell'utente
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Impossibile eliminare l'utente. Ci sono ordini in attesa. Rimborsa l'ordine o aspetta che venga spedito';
+    END IF;
+END
+```
+</details>
