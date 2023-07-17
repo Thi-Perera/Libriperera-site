@@ -4,15 +4,30 @@ Questo è il repository del progetto "Libriperera", un e-commerce per la vendita
 
 ## Descrizione del progetto
 
-Il progetto consiste nella creazione di un e-commerce chiamato Libriperera, dove i clienti possono acquistare prodotti editoriali. I clienti possono salvare e effettuare ordini, che verranno spediti all'indirizzo di spedizione specificato. I pagamenti possono essere effettuati tramite carta di credito o account PayPal.
+Il progetto consiste nella creazione di un e-commerce chiamato Libriperera, i clienti possono acquistare prodotti editoriali salvandoli nel carrello e effettuando l'ordine.
+L'ordine e composto da informazioni legati al cliente come pagamento e indirizzo di spedizione.
 
  - Il sito web è accessibile ai clienti che si registrano e accedono utilizzando un nome utente e una password.
  -  I clienti hanno la possibilità di cercare prodotti nel catalogo completo di informazioni come descrizione, prezzo e disponibilità del prodotto, e di aggiungere gli articoli desiderati al carrello.
  -  Gli articoli rimarranno nel carrello anche dopo la disconnessione del cliente e verranno rimossi o modificati solo in determinate situazioni, ad esempio quando viene effettuato l'ordine, quando vengono rimossi manualmente dall'utente o quando lo stato degli articoli nel magazzino cambia (ad esempio, se gli articoli non sono più disponibili o se è disponibile una quantità inferiore).
+  
 
 - Oltre ai clienti, ci sono altri due tipi di utenti nel sistema: l'Admin e il Super-admin.
-       - L'Admin, oltre ad essere un cliente, ha il privilegio di gestire le informazioni del catalogo degli articoli e può anche registrare nuovi admin.
-       - Il Super-admin è un admin con ulteriori privilegi, inclusi l'assegnazione e la revoca dei permessi di amministratore e la gestione degli ordini e dei pagamenti dei clienti.
+  - L'Admin, oltre ad essere un cliente, ha il privilegio di gestire le informazioni del catalogo degli articoli e può anche registrare nuovi admin.
+  - Il Super-admin è un admin con ulteriori privilegi, inclusi:
+    - l'assegnazione e la revoca dei permessi di amministratore
+    - la gestione degli ordini cliente come rimborso o rimborso parziale.
+  
+- Il database è arricchito da Trigger di segnalazione di operazioni rilevanti come:
+  - creazione di un ordine da parte di un cliente
+  - creazione o elimina di un articolo da parte di un admin
+  - modifica di un articolo da parte di un admin 
+  - rimborso parziale o totale di un ordine
+  - segnare un ordine come spedito
+  - restock o rimozione di una certa quantità dello stock di un determinato articolo
+  - registrazione di un nuovo admin
+  - subscription di un nuovo cliente sul sito
+
 
 ## Glossario
 
@@ -23,12 +38,22 @@ Admin | Utente iscritto al sito con privilegi di gestione degli articoli nel cat
 Super-admin | Admin con privilegi aggiuntivi per la gestione degli articoli, degli ordini e dei pagamenti | Gestore sito | Ordine, Pagamento, Carta di credito/PayPal
 Articolo | Prodotto editoriale disponibile per l'acquisto | Lista di articoli | Carrello, Ordine
 Ordine | Lista di articoli acquistati da un cliente pronti per essere spediti | Acquisto | Indirizzo, Carta di credito
+ituoiordini | Lista di ordini acquistati da un cliente con il relativo status dell'ordine | Acquisto | Indirizzo, Carta di credito
 Indirizzo | Informazioni necessarie per la spedizione a un domicilio | Domicilio | Cliente, Carrello
 Carrello | Lista di articoli salvati dall'utente per un eventuale acquisto | Articoli desiderati | Cliente, Articolo, Piattaforma cliente
 Piattaforma cliente | Sito web lato cliente che permette di acquistare articoli e effettuare ordini | Sito web | Cliente
 Piattaforma admin | Sito web lato admin che permette di gestire il catalogo degli articoli | Interfaccia di gestione | Admin
 
 ## Schema ER
+
+Alcune scelte compiute direttamente nello schema ER del progetto sono:
+- di fare un carrello non in sessione così da dare la comodità ad un cliente di fare logout mantenendo  gli articoli salvati per un futuro acquisto,chiaramente questa scelta ha portato ad una gestione più complessa, visto che è necessario che il cliente faccia sempre l'acquisto di articoli disponibili nella quantità richiesta.
+- Separare Articolo in 3 tabelle differenti
+  - articolo: tutte le informazioni relative al prodotto come Nome, Editore, Prezzo, Descrizione ecc...
+  - stock:  informazioni relative alla disponibilità degli articoli nel magazzino dell'ipotetico negozio online
+  - immagine_articolo: tutte le immagini di un articolo, così da dare la possibilità di avere 'n' immagini per articolo nel caso il sito ne dovesse avere bisogno in futuro (attualmente ne sono richieste 3)
+- L'admin come cliente con privilegi di gestione del sito, per dargli il punto di vista di un cliente al 100%, e per evitare di far fare ad un admin un altro account lui stesso può essere un cliente.
+  
 
 ![ER_libriperera drawio](https://github.com/Coco01010/Libriperera-site/assets/99124492/be9c01ef-cfa6-4f4f-a6a7-77d5d800bd01)
 
